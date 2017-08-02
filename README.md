@@ -14,5 +14,5 @@ Christopher M CM Christopher M. Bishop. *Pattern Recognition and Machine Learnin
 
 [gutenberg-aeneid]: http://www.gutenberg.org/files/227/227-h/227-h.htm
 [rodde-aeneid]: http://www.fenwickfriars.com/Page/246
-[dactylic-hexameter-wiki]: https://en.wikipedia.org/wiki/Dactylic hexameter
+[dactylic-hexameter-wiki]: https://en.wikipedia.org/wiki/Dactylic_hexameter
 [hexametrica-course]: http://www.skidmore.edu/academics/classics/courses/metrica/
