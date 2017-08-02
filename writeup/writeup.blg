@@ -1,0 +1,50 @@
+This is BibTeX, Version 0.99d (TeX Live 2015/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: writeup.aux
+The style file: unsrt.bst
+Database file #1: /home/nic/Documents/bibtex/school-nlp-final_project.bib
+Warning--empty year in Virgil
+Warning--can't use both author and editor fields in Bishop2006a
+Warning--can't use both volume and number fields in Bishop2006a
+You've used 6 entries,
+            1791 wiz_defined-function locations,
+            485 strings with 4410 characters,
+and the built_in function-call counts, 844 in all, are:
+= -- 64
+> -- 21
+< -- 1
++ -- 11
+- -- 5
+* -- 27
+:= -- 125
+add.period$ -- 18
+call.type$ -- 6
+change.case$ -- 3
+chr.to.int$ -- 0
+cite$ -- 9
+duplicate$ -- 46
+empty$ -- 113
+format.name$ -- 5
+if$ -- 195
+int.to.chr$ -- 0
+int.to.str$ -- 6
+missing$ -- 6
+newline$ -- 33
+num.names$ -- 5
+pop$ -- 42
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 16
+stack$ -- 0
+substring$ -- 0
+swap$ -- 10
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 3
+while$ -- 5
+width$ -- 7
+write$ -- 60
+(There were 3 warnings)

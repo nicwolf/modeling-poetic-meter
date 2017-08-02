@@ -1,0 +1,108 @@
+Programmatic Flow
+
+\section{Building a Corpus}
+
+1) From scanned corpus, extract diacritics to store metrical scansion patterns for each line. 
+2) Break the non-scanned corpus up into lines, break each line into words, and break each word into syllables (using regular expression matching).
+3) Start a counter, i = 0, and loop through syllables for every word in every line - create a tuple of (syllable, labels[i]) and increment i. In this way, the higher-level structures of the corpus (i.e. lines and words) are maintained and each syllable is matched up with the correct label. 
+
+\section{Training a Model}
+
+1) Generate feature sets for the labelled corpus. In Latin dactylic hexameter, there are three kinds of 'traits' that influence syllable length. They are ordered here by the strength with which they contribute to the determination of the length of a syllable. 
+
+There are three deterministic traits (Ultima): 
+
+	First Syllable on Line (Boolean)
+		This syllable is long. 
+
+	Second to Last Syllable on Line (Boolean)
+		This syllable is long. 
+
+	Last Syllable on Line (Boolean)
+		This syllable is indeterminant and can function as either
+		a long or a short syllable at the reader's discretion.
+
+These features are useful to capture because they guarantee that these 3 syllables will be marked correctly. There are usually anywhere between 12 and 17 syllables in one line of poetry, so we need to capture information about the rest of the syllables. None of these features are deterministic, but they do influence the length of the syllable one way or the other. 
+
+If a syllable is the last one in a word, the following features are useful (Length by Nature):
+
+	Final -o, -i, -u 
+		'Usually' long.
+
+	Final -as, -es, -us
+		'Usually' long.
+
+	Final -a, -is
+		'Often' short. 
+
+	Final -e
+		'Usually' short.
+
+	Final -us
+		'Usually' short. 
+
+	Final -am, -em, -um
+		'Usually' short. 
+
+The letters that follow the vowel(s) in a syllable also influence the length of the syllable (Length by Position):
+
+	Followed by Two Consonants
+		'Usually' creates a long vowel.
+
+	Followed by a Stop-Liquid
+		'Sometimes' will make position for a long vowel, not always. 
+
+	Dipthong
+		'Usually' long. 
+
+Notice that the way these features influence the length of a syllable are qualified with words like 'often', 'usually' and 'sometimes'. One of the cool side-effects of building a statistical model to guess the lengths of syllables is that we'll get access to the distributions that underlie those fuzzy qualifiers and be able to make claims like 'a final -o, -i, or -u is long 78% of the time'. The flexibility in these rules also gives the author some creative freedom to lengthen or shorten syllables as they see fit - so another side-effect of building feature distributions is that we'll make some kind of fingerprint for a given author's tendencies to break, bend, and ignore certain rules. 
+
+Because a lot of these features depend on the higher-level structures in which a syllable appears, the Python function that generates the feature-set for a syllable takes a whole line of poetry, a word index, and a syllable index (in that word) as arguments. This function is called for every syllable in the corpus and the returned feature set is stored in a 2-tuple with the correct label. Information about the higher-level structure that a syllable occurs in is contained implicitly in the feature set so we don't have to worry about preserving the structure of the poem (lines and words) in the array of feature sets (it can be collapsed into a 1-dimensional array which makes later computation easier). 
+
+2) Split the feature set into training and test folds - I'm using 75% of the data for training and the remaining 25% for testing. 33 lines, 506 syllables. 
+
+3) Next, we train a classifier on the training fold using the built-in NLTK Naive Bayesian classifier.
+
+\section{Evaluation}
+1) The NLTK Naive Bayesian classifier has a built-in evaluation function. When the classifier is evaluated on the test fold, it performs with an accuracy of 80.31%. The most common syllable length label is 'long' - if every syllable in the corpus was tagged as 'long' performance would be ~ 54.4%, so this is a pretty significant performance boost. 
+
+Generating Confusion Matrix for Naive Classification:
+  |      l      s      x      e |
+--+-----------------------------+
+l | <40.2%> 13.4%      .   0.8% |
+s |   5.5% <29.1%>     .      . |
+x |      .      .  <7.1%>     . |
+e |      .      .      .  <3.9%>|
+--+-----------------------------+
+(row = reference; col = test)
+
+2) The most informative features the model finds are:
+
+Most Informative Features
+               can_elide = True                e : l      =    123.6 : 1.0
+                dipthong = True                e : s      =     12.1 : 1.0
+               final_two = 'li'                x : l      =      5.3 : 1.0
+               final_two = 'ni'                s : l      =      4.7 : 1.0
+            final_letter = 'e'                 e : l      =      4.2 : 1.0
+               final_two = 'es'                x : s      =      4.1 : 1.0
+            final_letter = 'a'                 s : x      =      3.9 : 1.0
+               final_two = 've'                s : l      =      3.8 : 1.0
+               final_two = 'te'                s : l      =      3.8 : 1.0
+               final_two = 'ti'                s : l      =      3.3 : 1.0
+
+\section{Building a Better Model}
+1) One of the drawbacks to the way this classifier works is that it assumes independence between syllables - that is to say that the classifier doesn't consider the lengths of other syllables in a line when labelling a syllable. This is okay for tagging individual syllables, but really doesn't make sense in the context of a line of poetry. A meter like dactylic hexameter \emph{requires} that there be six meters in every line. When we run a line through the naive classifier and reassemble the syllables into words and the words into the line, usually the result isn't even a legal line of dactylic hexameter!
+
+One way around this involves building a Hidden Markov Model (HMM) that accounts for dependencies between syllables AND the structural constraints of a line of dactylic hexameter. Classifying a line of poetry by calculating the most likely sequence of hidden states in the HMM will improve syllable classification accuracy and (more importantly) ensure that every line of labelled poetry that comes out of the classifier will be a legal line. 
+
+This diagram represents the state transition diagram for a line of dactylic hexameter. 
+
+Any path from the 'long' syllable on the left side of the diagram (the first syllable in the line) to the 'X' (indeterminate) syllable on the left side of the diagram (the last syllable in the line) constitutes a sequence that is a valid line of dactylic hexameter. We assume independence between lines, and the space of possible paths is relatively small ($4^5 = 1024) for any individual line. We can also leverage the knowledge of how many syllables are in a line (easily computable) to restrict this space even more by only considering the paths that have a length = number of syllables. A line with 15 syllables, for example, only has 120 different possible sequences of lengths. Computationally, it would not be very expensive to compute the likelihood of \emph{every} possible path and using the Viterbi algorithm is an even more inexpensive way to calculate the most likely sequence of syllable lengths. 
+
+Classifying syllables in this way is 83.33% accurate. A slight increase in accuracy and the \emph{huge} added benefit of only producing legal scansion sequences. 
+
+\section{Future Work}
+
+1) Construct a larger corpus to train the model on. The current corpus has 506 labelled syllables in it (which is a pretty fair amount) but only 33 lines of poetry. Given the influence that the structure of a line has on all of the syllables in it, 33 is (I think) too small of a number. An additional benefit of having more lines is that it enable the construction of a prior distribution that could capture a belief in 
+
+2) Implementing the Viterbi algorithm would reduce the computational complexity of calculating the most likely sequence of states in the HMM from polynomial time to logarithmic time. 
