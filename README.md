@@ -1,3 +1,7 @@
+My final project for LING 388: Language and Computers.
+
+The training corpus in the `data/` folder was created from [Daniel Rodde's Annotated Aeneid][rodde-aeneid].
+
 ## References
 
 [Virgil. *The Aeneid*. Project Gutenberg.][gutenberg-aeneid]
